@@ -1,19 +1,84 @@
 {
-  "name": "decentralized-voting",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "decentralized-voting-system",
+  "version": "2.0.0",
+  "description": "Modern decentralized voting system using Ethereum blockchain with TypeScript, Vite, and PWA support",
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint . --ext ts,tsx,js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx,js,jsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "compile:contracts": "truffle compile",
+    "migrate:contracts": "truffle migrate",
+    "start:ganache": "ganache-cli -p 7545 -h 0.0.0.0",
+    "start:server": "node server/index.js",
+    "docker:build": "docker build -t voting-system .",
+    "docker:run": "docker run -p 3000:3000 voting-system"
   },
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "voting",
+    "decentralized",
+    "web3",
+    "typescript",
+    "vite",
+    "pwa"
+  ],
+  "author": "Murang'a University of Technology",
+  "license": "MIT",
   "dependencies": {
-    "@truffle/contract": "^4.6.18",
-    "browserify": "^17.0.1",
-    "dotenv": "^16.0.3",
+    "@truffle/contract": "^4.6.31",
+    "web3": "^1.10.4",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
-    "web3": "^1.9.0"
-  }
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "compression": "^1.7.4",
+    "express-validator": "^7.0.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-validator": "^3.0.0",
+    "@types/compression": "^1.7.5",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.8.10",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "@vitest/coverage-v8": "^0.34.6",
+    "@vitest/ui": "^0.34.6",
+    "eslint": "^8.53.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "jsdom": "^27.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-pwa": "^0.17.4",
+    "vitest": "^0.34.6",
+    "workbox-precaching": "^7.0.0",
+    "workbox-routing": "^7.0.0",
+    "workbox-strategies": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }

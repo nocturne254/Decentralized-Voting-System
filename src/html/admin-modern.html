@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MUT Voting System - Admin Dashboard</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+    }
+
+    .dashboard-header {
+      background: white;
+      box-shadow: var(--shadow-sm);
+      border-bottom: 1px solid var(--secondary-200);
+      padding: var(--space-4) 0;
+      margin-bottom: var(--space-6);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .logo {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: var(--font-size-xl);
+    }
+
+    .header-title h1 {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--secondary-900);
+      margin: 0;
+    }
+
+    .header-title p {
+      color: var(--secondary-600);
+      margin: 0;
+      font-size: var(--font-size-sm);
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .wallet-info {
+      text-align: right;
+    }
+
+    .wallet-address {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      color: var(--secondary-700);
+    }
+
+    .connection-status {
+      font-size: var(--font-size-xs);
+      color: var(--success-600);
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .stat-card {
+      background: white;
+      padding: var(--space-6);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--secondary-200);
+      text-align: center;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-3);
+      font-size: var(--font-size-xl);
+      color: white;
+    }
+
+    .stat-icon.primary { background: linear-gradient(135deg, var(--primary-500), var(--primary-600)); }
+    .stat-icon.success { background: linear-gradient(135deg, var(--success-500), var(--success-600)); }
+    .stat-icon.warning { background: linear-gradient(135deg, var(--warning-500), var(--warning-600)); }
+    .stat-icon.error { background: linear-gradient(135deg, var(--error-500), var(--error-600)); }
+
+    .stat-value {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--secondary-900);
+      margin-bottom: var(--space-1);
+    }
+
+    .stat-label {
+      color: var(--secondary-600);
+      font-size: var(--font-size-sm);
+    }
+
+    .section-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--secondary-200);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: var(--space-6);
+      border-bottom: 1px solid var(--secondary-200);
+      background: var(--secondary-50);
+    }
+
+    .section-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--secondary-900);
+      margin: 0 0 var(--space-2);
+    }
+
+    .section-description {
+      color: var(--secondary-600);
+      font-size: var(--font-size-sm);
+      margin: 0;
+    }
+
+    .section-content {
+      padding: var(--space-6);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .candidate-list {
+      border: 1px solid var(--secondary-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--space-4);
+    }
+
+    .candidate-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--secondary-200);
+      background: var(--secondary-50);
+    }
+
+    .candidate-item:last-child {
+      border-bottom: none;
+    }
+
+    .candidate-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .candidate-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--secondary-900);
+    }
+
+    .candidate-party {
+      font-size: var(--font-size-sm);
+      color: var(--secondary-600);
+    }
+
+    .election-card {
+      border: 1px solid var(--secondary-200);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      background: white;
+    }
+
+    .election-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-3);
+    }
+
+    .election-title {
+      font-weight: var(--font-weight-semibold);
+      color: var(--secondary-900);
+      margin: 0;
+    }
+
+    .election-status {
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .status-active {
+      background: var(--success-100);
+      color: var(--success-700);
+    }
+
+    .status-upcoming {
+      background: var(--warning-100);
+      color: var(--warning-700);
+    }
+
+    .status-ended {
+      background: var(--error-100);
+      color: var(--error-700);
+    }
+
+    .election-dates {
+      font-size: var(--font-size-sm);
+      color: var(--secondary-600);
+      margin-bottom: var(--space-3);
+    }
+
+    .election-stats {
+      display: flex;
+      gap: var(--space-4);
+      font-size: var(--font-size-sm);
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      color: var(--secondary-600);
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        gap: var(--space-3);
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <div class="header-title">
+            <h1>Admin Dashboard</h1>
+            <p>Murang'a University Voting System</p>
+          </div>
+        </div>
+        
+        <div class="user-section">
+          <div class="wallet-info">
+            <div class="wallet-address" id="walletAddress">0x1234...5678</div>
+            <div class="connection-status">
+              <i class="fas fa-circle"></i>
+              <span>Connected</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="switchAccount()">
+            <i class="fas fa-exchange-alt"></i>
+            Switch Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon primary">
+          <i class="fas fa-vote-yea"></i>
+        </div>
+        <div class="stat-value" id="totalElections">0</div>
+        <div class="stat-label">Total Elections</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <i class="fas fa-play"></i>
+        </div>
+        <div class="stat-value" id="activeElections">0</div>
+        <div class="stat-label">Active Elections</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value" id="totalVotes">0</div>
+        <div class="stat-label">Total Votes Cast</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon error">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <div class="stat-value" id="totalCandidates">0</div>
+        <div class="stat-label">Total Candidates</div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Create Election Form -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Create New Election</h2>
+          <p class="section-description">Set up a new voting election with candidates and schedule</p>
+        </div>
+        
+        <div class="section-content">
+          <form id="electionForm">
+            <div class="form-group">
+              <label class="label">Election Name</label>
+              <input type="text" class="input" id="electionName" placeholder="e.g., Student Council Elections 2025" required>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="label">Start Date & Time</label>
+                <input type="datetime-local" class="input" id="startDate" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="label">End Date & Time</label>
+                <input type="datetime-local" class="input" id="endDate" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="label">Candidates</label>
+              <div id="candidatesList" class="candidate-list">
+                <div class="candidate-item">
+                  <div class="candidate-info">
+                    <input type="text" class="input" placeholder="Candidate Name" id="candidateName1" style="margin-bottom: 8px;">
+                    <input type="text" class="input" placeholder="Party/Position" id="candidateParty1">
+                  </div>
+                  <button type="button" class="btn btn-error btn-sm" onclick="removeCandidate(1)" style="display: none;">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <button type="button" class="btn btn-secondary" onclick="addCandidate()">
+                <i class="fas fa-plus"></i>
+                Add Candidate
+              </button>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              <i class="fas fa-plus-circle"></i>
+              Create Election
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Elections List -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Election Management</h2>
+          <p class="section-description">View and manage all elections</p>
+        </div>
+        
+        <div class="section-content">
+          <div id="electionsList">
+            <div class="election-card">
+              <div class="election-header">
+                <h3 class="election-title">Student Council Elections 2025</h3>
+                <span class="election-status status-active">Active</span>
+              </div>
+              <div class="election-dates">
+                <i class="fas fa-calendar"></i>
+                Jan 15, 2025 - Jan 20, 2025
+              </div>
+              <div class="election-stats">
+                <div class="stat-item">
+                  <i class="fas fa-users"></i>
+                  <span>4 Candidates</span>
+                </div>
+                <div class="stat-item">
+                  <i class="fas fa-vote-yea"></i>
+                  <span>127 Votes</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style="text-align: center; color: var(--secondary-500); padding: var(--space-8);">
+              <i class="fas fa-inbox" style="font-size: var(--font-size-3xl); margin-bottom: var(--space-3);"></i>
+              <p>No additional elections found</p>
+            </div>
+          </div>
+          
+          <button class="btn btn-secondary" onclick="refreshElections()" style="width: 100%;">
+            <i class="fas fa-sync-alt"></i>
+            Refresh Elections
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+  <!-- Contract artifacts will be loaded dynamically by the blockchain module -->
+  <script src="https://cdn.jsdelivr.net/npm/@truffle/contract@4.6.8/dist/truffle-contract.min.js"></script>
+  <script type="module" src="../js/components/admin.js"></script>
+
+  <script>
+    let candidateCounter = 1;
+
+    function addCandidate() {
+      candidateCounter++;
+      const candidatesList = document.getElementById('candidatesList');
+      
+      const candidateItem = document.createElement('div');
+      candidateItem.className = 'candidate-item';
+      candidateItem.innerHTML = `
+        <div class="candidate-info">
+          <input type="text" class="input" placeholder="Candidate Name" id="candidateName${candidateCounter}" style="margin-bottom: 8px;">
+          <input type="text" class="input" placeholder="Party/Position" id="candidateParty${candidateCounter}">
+        </div>
+        <button type="button" class="btn btn-error btn-sm" onclick="removeCandidate(${candidateCounter})">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
+      candidatesList.appendChild(candidateItem);
+    }
+
+    function removeCandidate(id) {
+      const candidateItem = document.querySelector(`#candidateName${id}`).closest('.candidate-item');
+      candidateItem.remove();
+    }
+
+    function switchAccount() {
+      if (window.ethereum) {
+        window.ethereum.request({ 
+          method: 'wallet_requestPermissions', 
+          params: [{ eth_accounts: {} }] 
+        });
+      }
+    }
+
+    function refreshElections() {
+      // Simulate loading
+      const electionsList = document.getElementById('electionsList');
+      electionsList.innerHTML = '<div style="text-align: center; padding: var(--space-8);"><i class="fas fa-spinner fa-spin" style="font-size: var(--font-size-2xl);"></i><p>Loading elections...</p></div>';
+      
+      setTimeout(() => {
+        electionsList.innerHTML = `
+          <div class="election-card">
+            <div class="election-header">
+              <h3 class="election-title">Student Council Elections 2025</h3>
+              <span class="election-status status-active">Active</span>
+            </div>
+            <div class="election-dates">
+              <i class="fas fa-calendar"></i>
+              {{ startDate }} - {{ endDate }}
+            </div>
+            <div class="election-stats">
+              <div class="stat-item">
+                <i class="fas fa-users"></i>
+                <span>4 Candidates</span>
+              </div>
+              <div class="stat-item">
+                <i class="fas fa-vote-yea"></i>
+                <span>127 Votes</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; color: var(--secondary-500); padding: var(--space-8);">
+            <i class="fas fa-inbox" style="font-size: var(--font-size-3xl); margin-bottom: var(--space-3);"></i>
+            <p>No additional elections found</p>
+          </div>
+        `;
+      }, 1000);
+    }
+
+    // Form submission
+    document.getElementById('electionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const electionName = document.getElementById('electionName').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      
+      if (!electionName || !startDate || !endDate) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      // Collect candidates
+      const candidates = [];
+      for (let i = 1; i <= candidateCounter; i++) {
+        const nameInput = document.getElementById(`candidateName${i}`);
+        const partyInput = document.getElementById(`candidateParty${i}`);
+        
+        if (nameInput && partyInput && nameInput.value && partyInput.value) {
+          candidates.push({
+            name: nameInput.value,
+            party: partyInput.value
+          });
+        }
+      }
+      
+      if (candidates.length < 2) {
+        alert('Please add at least 2 candidates');
+        return;
+      }
+      
+      alert(`Creating election "${electionName}" with ${candidates.length} candidates.\n\nPlease confirm the transaction in MetaMask.`);
+    });
+
+    // Initialize wallet connection
+    if (window.ethereum) {
+      window.ethereum.request({ method: 'eth_accounts' })
+        .then(accounts => {
+          if (accounts.length > 0) {
+            document.getElementById('walletAddress').textContent = 
+              accounts[0].substring(0, 6) + '...' + accounts[0].substring(38);
+          }
+        });
+    }
+  </script>
+
+  <!-- Global functions for backward compatibility -->
+  <script>
+    // These functions will be handled by the modular admin component
+    function addCandidate() {
+      if (window.adminComponent) {
+        window.adminComponent.addCandidate();
+      }
+    }
+    
+    function switchAccount() {
+      if (window.adminComponent) {
+        window.adminComponent.switchAccount();
+      }
+    }
+    
+    function refreshElections() {
+      if (window.adminComponent) {
+        window.adminComponent.loadElections();
+      }
+    }
+  </script>
+</body>
+</html>

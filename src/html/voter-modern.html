@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MUT Voting System - Voter Portal</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+    }
+
+    .voter-header {
+      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+      color: white;
+      padding: var(--space-6) 0;
+      margin-bottom: var(--space-6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .voter-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .voter-logo {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-2xl);
+      backdrop-filter: blur(10px);
+    }
+
+    .header-title h1 {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      margin: 0 0 var(--space-1);
+    }
+
+    .header-title p {
+      opacity: 0.9;
+      margin: 0;
+      font-size: var(--font-size-base);
+    }
+
+    .voter-info {
+      text-align: right;
+    }
+
+    .voter-address {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      opacity: 0.9;
+      margin-bottom: var(--space-1);
+    }
+
+    .connection-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      background: rgba(255, 255, 255, 0.2);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      backdrop-filter: blur(10px);
+    }
+
+    .elections-grid {
+      display: grid;
+      gap: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+
+    .election-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--secondary-200);
+      overflow: hidden;
+      transition: all var(--transition-base);
+    }
+
+    .election-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .election-header {
+      padding: var(--space-6);
+      border-bottom: 1px solid var(--secondary-200);
+      background: var(--secondary-50);
+    }
+
+    .election-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-3);
+    }
+
+    .election-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--secondary-900);
+      margin: 0;
+    }
+
+    .election-status {
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+
+    .status-active {
+      background: var(--success-100);
+      color: var(--success-700);
+    }
+
+    .status-upcoming {
+      background: var(--warning-100);
+      color: var(--warning-700);
+    }
+
+    .status-ended {
+      background: var(--error-100);
+      color: var(--error-700);
+    }
+
+    .status-voted {
+      background: var(--primary-100);
+      color: var(--primary-700);
+    }
+
+    .election-dates {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-sm);
+      color: var(--secondary-600);
+    }
+
+    .election-content {
+      padding: var(--space-6);
+    }
+
+    .candidates-list {
+      margin-bottom: var(--space-6);
+    }
+
+    .candidate-option {
+      display: flex;
+      align-items: center;
+      padding: var(--space-4);
+      border: 2px solid var(--secondary-200);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-3);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      background: var(--secondary-50);
+    }
+
+    .candidate-option:hover {
+      border-color: var(--primary-300);
+      background: var(--primary-50);
+    }
+
+    .candidate-option.selected {
+      border-color: var(--primary-500);
+      background: var(--primary-100);
+    }
+
+    .candidate-radio {
+      margin-right: var(--space-3);
+      width: 20px;
+      height: 20px;
+    }
+
+    .candidate-info {
+      flex: 1;
+    }
+
+    .candidate-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--secondary-900);
+      margin-bottom: var(--space-1);
+    }
+
+    .candidate-party {
+      font-size: var(--font-size-sm);
+      color: var(--secondary-600);
+    }
+
+    .candidate-votes {
+      text-align: right;
+      font-size: var(--font-size-sm);
+      color: var(--secondary-600);
+    }
+
+    .vote-actions {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+    }
+
+    .results-section {
+      background: var(--secondary-50);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-top: var(--space-4);
+    }
+
+    .results-title {
+      font-weight: var(--font-weight-semibold);
+      color: var(--secondary-900);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .result-bar {
+      background: var(--secondary-200);
+      border-radius: var(--radius-full);
+      height: 8px;
+      margin-top: var(--space-2);
+      overflow: hidden;
+    }
+
+    .result-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+      border-radius: var(--radius-full);
+      transition: width var(--transition-slow);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-16) var(--space-8);
+      color: var(--secondary-500);
+    }
+
+    .empty-icon {
+      font-size: var(--font-size-5xl);
+      margin-bottom: var(--space-4);
+      opacity: 0.5;
+    }
+
+    .voting-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: var(--z-modal);
+      padding: var(--space-4);
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--primary-100);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+      font-size: var(--font-size-2xl);
+      color: var(--primary-600);
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: var(--space-4);
+        text-align: center;
+      }
+      
+      .vote-actions {
+        flex-direction: column;
+      }
+      
+      .candidate-option {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-2);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="voter-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="voter-logo">
+            <i class="fas fa-vote-yea"></i>
+          </div>
+          <div class="header-title">
+            <h1>Voter Portal</h1>
+            <p>Murang'a University Voting System</p>
+          </div>
+        </div>
+        
+        <div class="voter-info">
+          <div class="voter-address" id="voterAddress">0x1234...5678</div>
+          <div class="connection-badge">
+            <i class="fas fa-circle" style="color: #22c55e;"></i>
+            <span>Connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Elections List -->
+    <div class="elections-grid" id="electionsList">
+      <!-- Active Election -->
+      <div class="election-card">
+        <div class="election-header">
+          <div class="election-meta">
+            <h2 class="election-title">Student Council Elections 2025</h2>
+            <span class="election-status status-active">
+              <i class="fas fa-circle"></i>
+              Active
+            </span>
+          </div>
+          <div class="election-dates">
+            <i class="fas fa-calendar-alt"></i>
+            <span>January 15, 2025 - January 20, 2025</span>
+          </div>
+        </div>
+        
+        <div class="election-content">
+          <div class="candidates-list">
+            <div class="candidate-option" onclick="selectCandidate(1, 1)">
+              <input type="radio" name="election1" value="1" class="candidate-radio" id="candidate1_1">
+              <div class="candidate-info">
+                <div class="candidate-name">Alice Johnson</div>
+                <div class="candidate-party">Progressive Student Party</div>
+              </div>
+            </div>
+            
+            <div class="candidate-option" onclick="selectCandidate(1, 2)">
+              <input type="radio" name="election1" value="2" class="candidate-radio" id="candidate1_2">
+              <div class="candidate-info">
+                <div class="candidate-name">Bob Smith</div>
+                <div class="candidate-party">Student Unity Movement</div>
+              </div>
+            </div>
+            
+            <div class="candidate-option" onclick="selectCandidate(1, 3)">
+              <input type="radio" name="election1" value="3" class="candidate-radio" id="candidate1_3">
+              <div class="candidate-info">
+                <div class="candidate-name">Carol Davis</div>
+                <div class="candidate-party">Innovation Alliance</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="vote-actions">
+            <button class="btn btn-secondary" onclick="viewResults(1)">
+              <i class="fas fa-chart-bar"></i>
+              View Results
+            </button>
+            <button class="btn btn-primary" onclick="castVote(1)" id="voteBtn1">
+              <i class="fas fa-vote-yea"></i>
+              Cast Vote
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Election -->
+      <div class="election-card">
+        <div class="election-header">
+          <div class="election-meta">
+            <h2 class="election-title">Faculty Representative Elections</h2>
+            <span class="election-status status-voted">
+              <i class="fas fa-check"></i>
+              Voted
+            </span>
+          </div>
+          <div class="election-dates">
+            <i class="fas fa-calendar-alt"></i>
+            <span>December 1, 2024 - December 5, 2024</span>
+          </div>
+        </div>
+        
+        <div class="election-content">
+          <div class="results-section">
+            <div class="results-title">
+              <i class="fas fa-trophy"></i>
+              Final Results
+            </div>
+            
+            <div class="candidate-option" style="cursor: default; border-color: var(--success-300); background: var(--success-50);">
+              <div class="candidate-info">
+                <div class="candidate-name">Dr. Sarah Wilson</div>
+                <div class="candidate-party">Faculty Excellence Coalition</div>
+                <div class="result-bar">
+                  <div class="result-fill" style="width: 65%;"></div>
+                </div>
+              </div>
+              <div class="candidate-votes">
+                <strong>156 votes (65%)</strong>
+              </div>
+            </div>
+            
+            <div class="candidate-option" style="cursor: default;">
+              <div class="candidate-info">
+                <div class="candidate-name">Prof. Michael Brown</div>
+                <div class="candidate-party">Academic Reform Party</div>
+                <div class="result-bar">
+                  <div class="result-fill" style="width: 35%;"></div>
+                </div>
+              </div>
+              <div class="candidate-votes">
+                84 votes (35%)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Election -->
+      <div class="election-card">
+        <div class="election-header">
+          <div class="election-meta">
+            <h2 class="election-title">Sports Committee Elections</h2>
+            <span class="election-status status-upcoming">
+              <i class="fas fa-clock"></i>
+              Upcoming
+            </span>
+          </div>
+          <div class="election-dates">
+            <i class="fas fa-calendar-alt"></i>
+            <span>February 1, 2025 - February 5, 2025</span>
+          </div>
+        </div>
+        
+        <div class="election-content">
+          <div style="text-align: center; padding: var(--space-8); color: var(--secondary-500);">
+            <i class="fas fa-hourglass-half" style="font-size: var(--font-size-3xl); margin-bottom: var(--space-3);"></i>
+            <p>Voting will begin on February 1, 2025</p>
+            <p class="text-sm">Candidates will be announced soon</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State (hidden by default) -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-icon">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h3>No Elections Available</h3>
+      <p>There are currently no elections available for voting.</p>
+      <button class="btn btn-primary" onclick="refreshElections()">
+        <i class="fas fa-sync-alt"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Voting Confirmation Modal -->
+  <div class="voting-modal" id="votingModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-vote-yea"></i>
+      </div>
+      <h3>Confirm Your Vote</h3>
+      <p id="voteConfirmText">Are you sure you want to vote for <strong>Alice Johnson</strong>?</p>
+      <p class="text-sm text-secondary-600">This action cannot be undone.</p>
+      
+      <div style="display: flex; gap: var(--space-3); margin-top: var(--space-6);">
+        <button class="btn btn-secondary" onclick="closeVotingModal()" style="flex: 1;">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="confirmVote()" style="flex: 1;">
+          <i class="fas fa-check"></i>
+          Confirm Vote
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+  <!-- Contract artifacts will be loaded dynamically by the blockchain module -->
+  <script src="https://cdn.jsdelivr.net/npm/@truffle/contract@4.6.8/dist/truffle-contract.min.js"></script>
+  <script type="module" src="../js/components/voter.js"></script>
+  <script>
+    let selectedElection = null;
+    let selectedCandidate = null;
+
+    function selectCandidate(electionId, candidateId) {
+      // Remove previous selections
+      document.querySelectorAll(`input[name="election${electionId}"]`).forEach(radio => {
+        radio.closest('.candidate-option').classList.remove('selected');
+      });
+      
+      // Select current candidate
+      const radio = document.getElementById(`candidate${electionId}_${candidateId}`);
+      radio.checked = true;
+      radio.closest('.candidate-option').classList.add('selected');
+      
+      selectedElection = electionId;
+      selectedCandidate = candidateId;
+    }
+
+    function castVote(electionId) {
+      if (!selectedCandidate) {
+        alert('Please select a candidate before voting.');
+        return;
+      }
+      
+      const candidateNames = {
+        1: 'Alice Johnson',
+        2: 'Bob Smith',
+        3: 'Carol Davis'
+      };
+      
+      document.getElementById('voteConfirmText').innerHTML = 
+        `Are you sure you want to vote for <strong>${candidateNames[selectedCandidate]}</strong>?`;
+      
+      document.getElementById('votingModal').style.display = 'flex';
+    }
+
+    function confirmVote() {
+      // Simulate voting process
+      const modal = document.getElementById('votingModal');
+      const modalContent = modal.querySelector('.modal-content');
+      
+      modalContent.innerHTML = `
+        <div class="modal-icon" style="background: var(--success-100); color: var(--success-600);">
+          <div class="spinner" style="border-color: var(--success-200); border-top-color: var(--success-600);"></div>
+        </div>
+        <h3>Processing Vote...</h3>
+        <p>Please confirm the transaction in MetaMask</p>
+      `;
+      
+      setTimeout(() => {
+        modalContent.innerHTML = `
+          <div class="modal-icon" style="background: var(--success-100); color: var(--success-600);">
+            <i class="fas fa-check"></i>
+          </div>
+          <h3>Vote Successful!</h3>
+          <p>Your vote has been recorded on the blockchain.</p>
+          <button class="btn btn-primary" onclick="closeVotingModal()" style="margin-top: var(--space-4);">
+            <i class="fas fa-check"></i>
+            Done
+          </button>
+        `;
+        
+        // Update UI to show voted state
+        setTimeout(() => {
+          document.getElementById('voteBtn1').innerHTML = '<i class="fas fa-check"></i> Voted';
+          document.getElementById('voteBtn1').className = 'btn btn-success';
+          document.getElementById('voteBtn1').disabled = true;
+        }, 2000);
+      }, 2000);
+    }
+
+    function closeVotingModal() {
+      document.getElementById('votingModal').style.display = 'none';
+    }
+
+    function viewResults(electionId) {
+      alert('Results will be available after the election ends.');
+    }
+
+    function refreshElections() {
+      // Simulate refresh
+      const electionsList = document.getElementById('electionsList');
+      electionsList.innerHTML = '<div style="text-align: center; padding: var(--space-8);"><i class="fas fa-spinner fa-spin" style="font-size: var(--font-size-2xl);"></i><p>Loading elections...</p></div>';
+      
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    }
+
+  </script>
+</body>
+</html>

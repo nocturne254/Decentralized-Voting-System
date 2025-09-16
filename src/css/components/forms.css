@@ -1,0 +1,103 @@
+/* Form Components */
+
+.form-group {
+  margin-bottom: var(--space-4);
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--secondary-700);
+  margin-bottom: var(--space-2);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--secondary-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  background-color: white;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+.input:invalid {
+  border-color: var(--error-500);
+}
+
+.input:disabled {
+  background-color: var(--secondary-100);
+  color: var(--secondary-500);
+  cursor: not-allowed;
+}
+
+/* Input variants */
+.input-sm {
+  padding: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.input-lg {
+  padding: var(--space-4);
+  font-size: var(--font-size-base);
+}
+
+/* Textarea */
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Select */
+.select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Checkbox and Radio */
+.checkbox,
+.radio {
+  width: auto;
+  margin-right: var(--space-2);
+}
+
+/* Form validation */
+.form-error {
+  color: var(--error-600);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+.form-success {
+  color: var(--success-600);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+/* Input groups */
+.input-group {
+  position: relative;
+}
+
+.input-group .input {
+  padding-left: var(--space-12);
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--secondary-400);
+  pointer-events: none;
+}

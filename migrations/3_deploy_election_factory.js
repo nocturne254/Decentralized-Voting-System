@@ -1,5 +1,2 @@
-const ElectionFactory = artifacts.require("ElectionFactory");
-
-module.exports = function(deployer) {
-  deployer.deploy(ElectionFactory);
-};
+// This migration is superseded by 3_deploy_election_factory_v2.js
+// Keeping for reference but not actively used

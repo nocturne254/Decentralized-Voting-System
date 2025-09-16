@@ -1,0 +1,66 @@
+/* Card Components */
+
+.card {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-base);
+  padding: var(--space-6);
+  border: 1px solid var(--secondary-200);
+}
+
+.card-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--secondary-200);
+  background: var(--secondary-50);
+}
+
+.card-content {
+  padding: var(--space-6);
+}
+
+.card-footer {
+  padding: var(--space-4) var(--space-6);
+  background: var(--secondary-50);
+  border-top: 1px solid var(--secondary-200);
+}
+
+/* Card variants */
+.card-elevated {
+  box-shadow: var(--shadow-lg);
+}
+
+.card-bordered {
+  border: 2px solid var(--secondary-200);
+}
+
+/* Alert cards */
+.alert {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  margin-bottom: var(--space-4);
+}
+
+.alert-success {
+  background-color: var(--success-50);
+  border-color: var(--success-200);
+  color: var(--success-800);
+}
+
+.alert-warning {
+  background-color: var(--warning-50);
+  border-color: var(--warning-200);
+  color: var(--warning-800);
+}
+
+.alert-error {
+  background-color: var(--error-50);
+  border-color: var(--error-200);
+  color: var(--error-800);
+}
+
+.alert-info {
+  background-color: var(--primary-50);
+  border-color: var(--primary-200);
+  color: var(--primary-800);
+}

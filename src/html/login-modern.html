@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MUT Voting System - Login</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Design System -->
+  <link rel="stylesheet" href="../css/main.css">
+  
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-2xl);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, var(--mut-primary) 0%, var(--mut-secondary) 100%);
+      padding: var(--space-8) var(--space-6) var(--space-6);
+      text-align: center;
+      color: white;
+      position: relative;
+    }
+
+    .login-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .university-logo {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .university-title {
+      position: relative;
+      z-index: 1;
+    }
+
+    .university-title h1 {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      margin: 0 0 var(--space-2);
+      line-height: var(--line-height-tight);
+    }
+
+    .university-title p {
+      font-size: var(--font-size-sm);
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    .login-form {
+      padding: var(--space-8) var(--space-6) var(--space-6);
+    }
+
+    .form-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--secondary-900);
+      margin-bottom: var(--space-6);
+      text-align: center;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: var(--space-6);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--secondary-400);
+      z-index: 1;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: var(--space-4) var(--space-4) var(--space-4) var(--space-12);
+      border: 2px solid var(--secondary-200);
+      border-radius: var(--radius-lg);
+      font-size: var(--font-size-base);
+      transition: all var(--transition-base);
+      background: var(--secondary-50);
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      background: white;
+      box-shadow: 0 0 0 4px rgb(59 130 246 / 0.1);
+    }
+
+    .input-field:focus + .input-icon {
+      color: var(--primary-500);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: var(--space-4);
+      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login-btn .btn-text {
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-btn .loading-spinner {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .login-btn.loading .btn-text {
+      opacity: 0;
+    }
+
+    .login-btn.loading .loading-spinner {
+      display: block;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .login-footer {
+      padding: var(--space-4) var(--space-6);
+      background: var(--secondary-50);
+      text-align: center;
+      border-top: 1px solid var(--secondary-200);
+    }
+
+    .demo-credentials {
+      font-size: var(--font-size-sm);
+      color: var(--secondary-600);
+      margin-bottom: var(--space-3);
+    }
+
+    .demo-credentials strong {
+      color: var(--secondary-800);
+    }
+
+    .security-note {
+      font-size: var(--font-size-xs);
+      color: var(--secondary-500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+    }
+
+    .error-message {
+      background: var(--error-50);
+      border: 1px solid var(--error-200);
+      color: var(--error-700);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+      font-size: var(--font-size-sm);
+      display: none;
+    }
+
+    .success-message {
+      background: var(--success-50);
+      border: 1px solid var(--success-200);
+      color: var(--success-700);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+      font-size: var(--font-size-sm);
+      display: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 480px) {
+      .login-container {
+        margin: var(--space-4);
+        border-radius: var(--radius-xl);
+      }
+
+      .login-header {
+        padding: var(--space-6) var(--space-4) var(--space-4);
+      }
+
+      .university-logo {
+        width: 60px;
+        height: 60px;
+        font-size: var(--font-size-xl);
+      }
+
+      .university-title h1 {
+        font-size: var(--font-size-lg);
+      }
+
+      .login-form {
+        padding: var(--space-6) var(--space-4) var(--space-4);
+      }
+    }
+
+    /* Animation for form appearance */
+    .login-container {
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="university-logo">
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+      <div class="university-title">
+        <h1>Murang'a University of Technology</h1>
+        <p>Decentralized Voting System</p>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="login-form">
+      <h2 class="form-title">Welcome Back</h2>
+      
+      <div id="errorMessage" class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorText">Invalid credentials. Please try again.</span>
+      </div>
+
+      <div id="successMessage" class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <span id="successText">Login successful! Redirecting...</span>
+      </div>
+
+      <form id="loginForm">
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="voter-id" 
+            name="voter-id" 
+            class="input-field" 
+            placeholder="Enter your Voter ID"
+            required
+            autocomplete="username"
+          >
+          <i class="fas fa-user input-icon"></i>
+        </div>
+
+        <div class="input-group">
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="input-field" 
+            placeholder="Enter your password"
+            required
+            autocomplete="current-password"
+          >
+          <i class="fas fa-lock input-icon"></i>
+        </div>
+
+        <button type="submit" id="loginBtn" class="login-btn">
+          <span class="btn-text">
+            <i class="fas fa-sign-in-alt"></i>
+            Sign In
+          </span>
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <div class="demo-credentials">
+        <strong>Demo Credentials:</strong><br>
+        Admin: <code>admin1</code> / <code>admin123</code><br>
+        Voter: <code>user1</code> / <code>user123</code>
+      </div>
+      <div class="security-note">
+        <i class="fas fa-shield-alt"></i>
+        <span>Secured by blockchain technology</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script type="module" src="../js/components/login.js"></script>
+</body>
+</html>
