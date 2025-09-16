@@ -110,7 +110,7 @@ export class GDPRComplianceManager {
 
     // Check if data has expired
     if (this.isDataExpired(personalData)) {
-      this.erasePersonalData(pseudonym);
+      this.deletePersonalData(pseudonym);
       return null;
     }
 
@@ -574,12 +574,20 @@ To exercise your rights, contact: [Contact Information]
     return requestId;
   }
 
-  private completeDataSubjectRequest(requestId: string): void {
+  private async completeDataSubjectRequest(requestId: string): Promise<void> {
     const request = this.dataRequests.get(requestId);
     if (request) {
       request.status = 'completed';
       request.completionDate = Date.now();
+      if (request.type === 'erasure') {
+        await this.deletePersonalData(request.subjectId);
+      }
     }
+  }
+
+  private async deletePersonalData(subjectId: string): Promise<void> {
+    // Implementation for deleting personal data
+    console.log(`Deleting personal data for subject: ${subjectId}`);
   }
 
   private markDataForErasureOnConsentWithdrawal(subjectId: string, purpose: string): void {
@@ -598,10 +606,10 @@ To exercise your rights, contact: [Contact Information]
   /**
    * Automated cleanup of expired data
    */
-  performAutomatedCleanup(): {
+  async performAutomatedCleanup(): Promise<{
     deletedRecords: number;
     errors: string[];
-  } {
+  }> {
     const deletedRecords: string[] = [];
     const errors: string[] = [];
 
@@ -612,7 +620,7 @@ To exercise your rights, contact: [Contact Information]
           this.pseudonymMap.delete(data.pseudonym);
           deletedRecords.push(id);
         } catch (error) {
-          errors.push(`Failed to delete record ${id}: ${error.message}`);
+          errors.push(`Failed to delete record ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     }

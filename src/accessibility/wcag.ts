@@ -127,7 +127,7 @@ export class WCAGComplianceManager {
    * @param event Keyboard event
    */
   private handleKeyboardNavigation(event: KeyboardEvent): void {
-    const { key, ctrlKey, altKey, shiftKey } = event;
+    const { key, ctrlKey, altKey } = event;
 
     // Skip to main content (Alt + M)
     if (altKey && key.toLowerCase() === 'm') {
