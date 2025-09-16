@@ -1,270 +1,185 @@
 #!/bin/bash
 
-# Production Deployment Script for Multi-Tenant Voting System
-# This script handles deployment to various environments
+# Enhanced Production Deployment Script for Blockchain Voting System
+set -e
 
-set -e  # Exit on any error
+echo "Starting Enhanced Blockchain Voting System Deployment..."
+
+# Configuration
+ENVIRONMENT=${1:-production}
+COMPOSE_FILE="docker-compose.production.yml"
+BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Default values
-ENVIRONMENT="production"
-SKIP_BUILD=false
-SKIP_TESTS=false
-BACKUP_DB=true
+# Logging function
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
 
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    -e|--environment)
-      ENVIRONMENT="$2"
-      shift 2
-      ;;
-    --skip-build)
-      SKIP_BUILD=true
-      shift
-      ;;
-    --skip-tests)
-      SKIP_TESTS=true
-      shift
-      ;;
-    --no-backup)
-      BACKUP_DB=false
-      shift
-      ;;
-    -h|--help)
-      echo "Usage: $0 [OPTIONS]"
-      echo "Options:"
-      echo "  -e, --environment ENV    Target environment (production, staging, development)"
-      echo "  --skip-build            Skip the build process"
-      echo "  --skip-tests            Skip running tests"
-      echo "  --no-backup             Skip database backup"
-      echo "  -h, --help              Show this help message"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option $1"
-      exit 1
-      ;;
-  esac
+warn() {
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: $1${NC}"
+}
+
+error() {
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1${NC}"
+    exit 1
+}
+
+# Pre-deployment checks
+log "Running pre-deployment checks..."
+
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    error "Docker is not running. Please start Docker and try again."
+fi
+
+# Check if docker-compose is available
+if ! command -v docker-compose &> /dev/null; then
+    error "docker-compose is not installed. Please install it and try again."
+fi
+
+# Check environment file
+if [ ! -f "docker/production.env" ]; then
+    error "Production environment file not found. Please create docker/production.env"
+fi
+
+# Validate environment variables
+log "Validating environment configuration..."
+source docker/production.env
+
+required_vars=(
+    "DATABASE_URL"
+    "JWT_SECRET"
+    "ENCRYPTION_KEY"
+    "BLOCKCHAIN_NETWORK"
+)
+
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var}" ]; then
+        error "Required environment variable $var is not set"
+    fi
 done
 
-echo -e "${BLUE}🚀 Starting deployment to ${ENVIRONMENT} environment${NC}"
-
-# Check if required files exist
-if [ ! -f ".env.${ENVIRONMENT}" ]; then
-    echo -e "${RED}❌ Environment file .env.${ENVIRONMENT} not found${NC}"
-    exit 1
-fi
-
-if [ ! -f "package.json" ]; then
-    echo -e "${RED}❌ package.json not found${NC}"
-    exit 1
-fi
-
-# Load environment variables
-echo -e "${YELLOW}📋 Loading environment configuration...${NC}"
-export $(cat .env.${ENVIRONMENT} | grep -v '^#' | xargs)
-
-# Install dependencies
-echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-npm ci --only=production
-
-# Run tests (unless skipped)
-if [ "$SKIP_TESTS" = false ]; then
-    echo -e "${YELLOW}🧪 Running tests...${NC}"
-    npm run test:ci || {
-        echo -e "${RED}❌ Tests failed. Deployment aborted.${NC}"
-        exit 1
-    }
-    echo -e "${GREEN}✅ All tests passed${NC}"
-fi
-
-# Build the application (unless skipped)
-if [ "$SKIP_BUILD" = false ]; then
-    echo -e "${YELLOW}🔨 Building application...${NC}"
-    npm run build || {
-        echo -e "${RED}❌ Build failed. Deployment aborted.${NC}"
-        exit 1
-    }
-    echo -e "${GREEN}✅ Build completed successfully${NC}"
-fi
-
-# Database backup (if enabled)
-if [ "$BACKUP_DB" = true ] && [ "$ENVIRONMENT" = "production" ]; then
-    echo -e "${YELLOW}💾 Creating database backup...${NC}"
-    BACKUP_FILE="backup_$(date +%Y%m%d_%H%M%S).sql"
+# Create backup if system is already running
+if docker-compose -f $COMPOSE_FILE ps | grep -q "Up"; then
+    log "Creating backup before deployment..."
+    mkdir -p $BACKUP_DIR
     
-    if [ ! -z "$DATABASE_URL" ]; then
-        pg_dump "$DATABASE_URL" > "backups/$BACKUP_FILE" || {
-            echo -e "${YELLOW}⚠️  Database backup failed, continuing deployment...${NC}"
-        }
-        echo -e "${GREEN}✅ Database backup created: $BACKUP_FILE${NC}"
-    else
-        echo -e "${YELLOW}⚠️  DATABASE_URL not set, skipping backup${NC}"
+    # Backup database
+    docker-compose -f $COMPOSE_FILE exec -T postgres pg_dump -U $POSTGRES_USER $POSTGRES_DB > $BACKUP_DIR/database.sql
+    
+    # Backup uploads
+    if [ -d "./uploads" ]; then
+        cp -r ./uploads $BACKUP_DIR/
     fi
+    
+    log "Backup created at $BACKUP_DIR"
 fi
 
-# Deploy based on environment
-case $ENVIRONMENT in
-    "production")
-        deploy_production
-        ;;
-    "staging")
-        deploy_staging
-        ;;
-    "development")
-        deploy_development
-        ;;
-    *)
-        echo -e "${RED}❌ Unknown environment: $ENVIRONMENT${NC}"
-        exit 1
-        ;;
-esac
+# Pull latest images
+log "Pulling latest Docker images..."
+docker-compose -f $COMPOSE_FILE pull
 
-deploy_production() {
-    echo -e "${YELLOW}🌐 Deploying to production...${NC}"
-    
-    # Create deployment directory
-    DEPLOY_DIR="/var/www/voting-system"
-    sudo mkdir -p "$DEPLOY_DIR"
-    
-    # Copy built files
-    sudo cp -r dist/* "$DEPLOY_DIR/"
-    sudo cp -r src/api "$DEPLOY_DIR/"
-    sudo cp package.json "$DEPLOY_DIR/"
-    sudo cp .env.production "$DEPLOY_DIR/.env"
-    
-    # Set permissions
-    sudo chown -R www-data:www-data "$DEPLOY_DIR"
-    sudo chmod -R 755 "$DEPLOY_DIR"
-    
-    # Install production dependencies
-    cd "$DEPLOY_DIR"
-    sudo -u www-data npm ci --only=production
-    
-    # Restart services
-    sudo systemctl restart voting-api
-    sudo systemctl restart nginx
-    
-    # Health check
-    sleep 5
-    if curl -f http://localhost:3000/health > /dev/null 2>&1; then
-        echo -e "${GREEN}✅ Production deployment successful${NC}"
-    else
-        echo -e "${RED}❌ Health check failed${NC}"
-        exit 1
+# Build application
+log "Building application..."
+docker-compose -f $COMPOSE_FILE build --no-cache
+
+# Run database migrations
+log "Running database migrations..."
+docker-compose -f $COMPOSE_FILE up -d postgres redis
+sleep 10
+
+# Wait for database to be ready
+log "Waiting for database to be ready..."
+for i in {1..30}; do
+    if docker-compose -f $COMPOSE_FILE exec -T postgres pg_isready -U $POSTGRES_USER -d $POSTGRES_DB > /dev/null 2>&1; then
+        log "Database is ready"
+        break
     fi
-}
+    if [ $i -eq 30 ]; then
+        error "Database failed to start"
+    fi
+    sleep 2
+done
 
-deploy_staging() {
-    echo -e "${YELLOW}🧪 Deploying to staging...${NC}"
-    
-    # Deploy to staging server
-    rsync -avz --delete \
-        --exclude=node_modules \
-        --exclude=.git \
-        ./ staging-server:/var/www/voting-system-staging/
-    
-    # Run deployment commands on staging server
-    ssh staging-server << 'EOF'
-        cd /var/www/voting-system-staging
-        npm ci
-        npm run build
-        pm2 restart voting-api-staging
-EOF
-    
-    echo -e "${GREEN}✅ Staging deployment successful${NC}"
-}
-
-deploy_development() {
-    echo -e "${YELLOW}💻 Setting up development environment...${NC}"
-    
-    # Start development servers
-    npm run dev &
-    DEV_PID=$!
-    
-    # Start API server
-    npm run api:dev &
-    API_PID=$!
-    
-    echo -e "${GREEN}✅ Development servers started${NC}"
-    echo -e "${BLUE}Frontend: http://localhost:5173${NC}"
-    echo -e "${BLUE}API: http://localhost:3000${NC}"
-    echo -e "${YELLOW}Press Ctrl+C to stop servers${NC}"
-    
-    # Wait for interrupt
-    trap "kill $DEV_PID $API_PID 2>/dev/null" EXIT
-    wait
-}
-
-# Docker deployment function
-deploy_docker() {
-    echo -e "${YELLOW}🐳 Deploying with Docker...${NC}"
-    
-    # Build Docker image
-    docker build -t voting-system:${ENVIRONMENT} .
-    
-    # Stop existing container
-    docker stop voting-system-${ENVIRONMENT} 2>/dev/null || true
-    docker rm voting-system-${ENVIRONMENT} 2>/dev/null || true
-    
-    # Run new container
-    docker run -d \
-        --name voting-system-${ENVIRONMENT} \
-        --env-file .env.${ENVIRONMENT} \
-        -p 3000:3000 \
-        -p 5173:5173 \
-        voting-system:${ENVIRONMENT}
-    
-    echo -e "${GREEN}✅ Docker deployment successful${NC}"
-}
-
-# Kubernetes deployment function
-deploy_kubernetes() {
-    echo -e "${YELLOW}☸️  Deploying to Kubernetes...${NC}"
-    
-    # Apply Kubernetes manifests
-    kubectl apply -f k8s/namespace.yaml
-    kubectl apply -f k8s/configmap.yaml
-    kubectl apply -f k8s/secret.yaml
-    kubectl apply -f k8s/deployment.yaml
-    kubectl apply -f k8s/service.yaml
-    kubectl apply -f k8s/ingress.yaml
-    
-    # Wait for deployment to be ready
-    kubectl rollout status deployment/voting-system -n voting-system
-    
-    echo -e "${GREEN}✅ Kubernetes deployment successful${NC}"
-}
-
-# Cleanup function
-cleanup() {
-    echo -e "${YELLOW}🧹 Cleaning up temporary files...${NC}"
-    rm -rf temp_deploy/
-}
-
-# Set up cleanup trap
-trap cleanup EXIT
-
-echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
-
-# Display post-deployment information
-echo -e "\n${BLUE}📋 Post-deployment Information:${NC}"
-echo -e "Environment: ${ENVIRONMENT}"
-echo -e "Institution: ${VITE_INSTITUTION_NAME:-'Not configured'}"
-echo -e "API URL: ${API_BASE_URL:-'http://localhost:3000'}"
-
-if [ "$ENVIRONMENT" = "production" ]; then
-    echo -e "\n${YELLOW}🔧 Next Steps:${NC}"
-    echo -e "1. Update DNS records if needed"
-    echo -e "2. Configure SSL certificates"
-    echo -e "3. Set up monitoring and alerts"
-    echo -e "4. Test all functionality"
-    echo -e "5. Notify stakeholders"
+# Apply migrations
+if [ -f "Database_API/migrations/001_enhanced_features.sql" ]; then
+    log "Applying database migrations..."
+    docker-compose -f $COMPOSE_FILE exec -T postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -f /docker-entrypoint-initdb.d/001_enhanced_features.sql
 fi
+
+# Start all services
+log "Starting all services..."
+docker-compose -f $COMPOSE_FILE up -d
+
+# Wait for services to be ready
+log "Waiting for services to be ready..."
+sleep 30
+
+# Health checks
+log "Running health checks..."
+services=("voting-app:3000" "voting-app:8000")
+for service in "${services[@]}"; do
+    host=$(echo $service | cut -d: -f1)
+    port=$(echo $service | cut -d: -f2)
+    
+    for i in {1..30}; do
+        if docker-compose -f $COMPOSE_FILE exec -T voting-app curl -f http://localhost:$port/health > /dev/null 2>&1; then
+            log "$host:$port is healthy"
+            break
+        fi
+        if [ $i -eq 30 ]; then
+            warn "$host:$port health check failed"
+        fi
+        sleep 2
+    done
+done
+
+# Run post-deployment tests
+log "Running post-deployment tests..."
+if [ -f "tests/deployment-test.sh" ]; then
+    bash tests/deployment-test.sh
+else
+    warn "No deployment tests found"
+fi
+
+# Display deployment information
+log "Deployment completed successfully!"
+echo ""
+echo "=== Deployment Information ==="
+echo "Environment: $ENVIRONMENT"
+echo "Services:"
+echo "  - Main Application: http://localhost:3000"
+echo "  - API: http://localhost:8000"
+echo "  - Grafana Dashboard: http://localhost:3001"
+echo "  - Prometheus: http://localhost:9090"
+echo ""
+echo "=== Service Status ==="
+docker-compose -f $COMPOSE_FILE ps
+echo ""
+
+# Show logs for any failed services
+failed_services=$(docker-compose -f $COMPOSE_FILE ps --services --filter "status=exited")
+if [ ! -z "$failed_services" ]; then
+    warn "Some services failed to start:"
+    for service in $failed_services; do
+        echo "=== Logs for $service ==="
+        docker-compose -f $COMPOSE_FILE logs --tail=50 $service
+    done
+fi
+
+log "Deployment script completed!"
+echo ""
+echo "Next steps:"
+echo "1. Configure SSL certificates if using HTTPS"
+echo "2. Set up monitoring alerts"
+echo "3. Configure backup schedules"
+echo "4. Run security audit"
+echo ""
+echo "To view logs: docker-compose -f $COMPOSE_FILE logs -f"
+echo "To stop services: docker-compose -f $COMPOSE_FILE down"

@@ -1,7 +1,7 @@
 {
   "name": "decentralized-voting-system",
-  "version": "2.0.0",
-  "description": "Modern decentralized voting system using Ethereum blockchain with TypeScript, Vite, and PWA support",
+  "version": "3.0.0",
+  "description": "Enhanced blockchain voting system with candidate profiles, live tallying, manifesto tracking, and advanced UI/UX features",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -20,8 +20,18 @@
     "migrate:contracts": "truffle migrate",
     "start:ganache": "ganache-cli -p 7545 -h 0.0.0.0",
     "start:server": "node server/index.js",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:a11y": "axe-core tests/accessibility",
+    "test:security": "npm audit && snyk test",
+    "test:performance": "lighthouse-ci",
+    "test:load": "artillery run tests/load-test.yml",
+    "test:all": "npm run test && npm run test:integration && npm run test:e2e && npm run test:a11y",
+    "test:ci": "npm run test:coverage && npm run test:integration",
     "docker:build": "docker build -t voting-system .",
-    "docker:run": "docker run -p 3000:3000 voting-system"
+    "docker:run": "docker run -p 3000:3000 voting-system",
+    "deploy:production": "./scripts/deploy.sh production",
+    "deploy:staging": "./scripts/deploy.sh staging"
   },
   "keywords": [
     "blockchain",

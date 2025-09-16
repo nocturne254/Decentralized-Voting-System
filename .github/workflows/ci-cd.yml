@@ -101,7 +101,7 @@ jobs:
     - name: Run Snyk security scan
       uses: snyk/actions/node@master
       env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       with:
         args: --severity-threshold=high
       continue-on-error: true
@@ -138,7 +138,7 @@ jobs:
         docker tag voting-system:${{ github.sha }} voting-system:latest
 
     - name: Login to Docker Hub
-      uses: docker/login-action@v3
+      uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -147,7 +147,6 @@ jobs:
     - name: Push Docker image
       run: |
         docker push voting-system:${{ github.sha }}
-        docker push voting-system:latest
 
     - name: Deploy to staging
       if: github.ref == 'refs/heads/develop'
@@ -162,7 +161,7 @@ jobs:
         ./scripts/deploy.sh production
       env:
         PRODUCTION_API_KEY: ${{ secrets.PROD_API_KEY }}
-        PRODUCTION_DB_URL: ${{ secrets.PROD_DATABASE_URL }}
+        DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
 
     - name: Run smoke tests
       run: |
@@ -174,7 +173,7 @@ jobs:
       with:
         status: ${{ job.status }}
         channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       if: always()
 
   performance:

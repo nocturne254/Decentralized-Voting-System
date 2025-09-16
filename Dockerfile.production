@@ -1,0 +1,71 @@
+# Production Dockerfile for Enhanced Blockchain Voting System
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY Database_API/requirements.txt ./Database_API/
+
+# Install Node.js dependencies
+RUN npm ci --only=production
+
+# Install Python and dependencies
+RUN apk add --no-cache python3 py3-pip postgresql-dev gcc musl-dev python3-dev
+RUN pip3 install -r Database_API/requirements.txt
+
+# Copy source code
+COPY . .
+
+# Build application
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine AS production
+
+# Install system dependencies
+RUN apk add --no-cache python3 py3-pip postgresql-client curl
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S voting -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application
+COPY --from=builder --chown=voting:nodejs /app/dist ./dist
+COPY --from=builder --chown=voting:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=voting:nodejs /app/Database_API ./Database_API
+COPY --from=builder --chown=voting:nodejs /app/contracts ./contracts
+COPY --from=builder --chown=voting:nodejs /app/src ./src
+COPY --from=builder --chown=voting:nodejs /app/package*.json ./
+
+# Copy production configuration
+COPY --chown=voting:nodejs docker/production.env .env
+COPY --chown=voting:nodejs docker/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=voting:nodejs scripts/start-production.sh ./start.sh
+
+# Make scripts executable
+RUN chmod +x start.sh
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/uploads /app/temp
+RUN chown -R voting:nodejs /app
+
+# Install Python dependencies for API
+RUN pip3 install -r Database_API/requirements.txt
+
+# Switch to non-root user
+USER voting
+
+# Expose ports
+EXPOSE 3000 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# Start application
+CMD ["./start.sh"]

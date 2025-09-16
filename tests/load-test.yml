@@ -1,0 +1,128 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 5
+      name: "Cool down"
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - "voterId"
+      - "password"
+      - "candidateId"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+scenarios:
+  - name: "Voter Login and Vote Flow"
+    weight: 70
+    flow:
+      - post:
+          url: "/api/login"
+          json:
+            voterId: "{{ voterId }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/elections/active"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            - json: "$[0].id"
+              as: "electionId"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/elections/{{ electionId }}/candidates"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+      
+      - post:
+          url: "/api/votes/confirm"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            candidate_id: "{{ candidateId }}"
+            candidate_name: "Test Candidate"
+            grace_period_seconds: 20
+          capture:
+            - json: "$.vote_id"
+              as: "voteId"
+          expect:
+            - statusCode: 200
+      
+      - think: 5
+      
+      - post:
+          url: "/api/votes/{{ voteId }}/cast"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Admin Dashboard Access"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/login"
+          json:
+            voterId: "admin"
+            password: "admin123"
+          capture:
+            - json: "$.token"
+              as: "adminToken"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/admin/dashboard"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/tally/live"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Candidate Profile Access"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/candidates/enhanced"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/candidates/{{ candidateId }}/enhanced"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/candidates/{{ candidateId }}/performance"
+          expect:
+            - statusCode: 200
